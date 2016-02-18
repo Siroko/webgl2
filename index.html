@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebGL2</title>
+    <link rel="stylesheet" href="css/main.css" />
+
+    <script id="vsGBuffer" type="x-shader/x-vertex">
+		varying vec2 vUv;
+        varying vec3 vNormal;
+        varying float vDepth;
+
+        uniform float uNear;
+        uniform float uFar;
+
+        void main() {
+
+            vUv = uv;
+            vNormal = normalize( normalMatrix * normal );
+
+            // this will transform the vertex into eyespace
+            vec4 viewPosition = vec4( modelViewMatrix * vec4( position, 1.0 ) );
+            vDepth = 1. - ( uNear + viewPosition.z ) / ( uNear - uFar );
+            vDepth = -viewPosition.z;
+            // will map near..far to 0..1
+            vDepth = (-viewPosition.z - uNear ) / ( uFar - uNear );
+
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+        }
+
+	</script>
+
+    <script id="fsGBuffer" type="x-shader/x-fragment">
+
+        uniform vec4 uColor;
+
+        varying vec2 vUv;
+        varying vec3 vNormal;
+        varying float vDepth;
+
+		void main()	{
+			gl_FragColor = vec4( vNormal.r * uColor.r * vDepth, vNormal.g * uColor.g * vDepth, vNormal.b * uColor.b * vDepth, 1.0);
+			gl_FragColor = vec4( vNormal, 1.0);
+			gl_FragColor = vec4( uColor );
+			gl_FragColor = vec4( vDepth, vDepth, vDepth, 1.0);
+		}
+
+	</script>
+
+    <script id="vsDeferredShader" type="x-shader/x-vertex">
+		varying vec2 vUv;
+
+		void main()	{
+            vUv = uv;
+			gl_Position = vec4( position, 1.0 );
+		}
+
+	</script>
+
+    <script id="fsDeferredShader" type="x-shader/x-fragment">
+
+		uniform sampler2D uDiffuse;
+        uniform sampler2D uNormal;
+        uniform sampler2D uDepth;
+
+        varying vec2 vUv;
+
+		void main()	{
+			vec4 color = texture2D( uDiffuse, vUv );
+			gl_FragColor = vec4(vec3(color.rgb), 1.0);
+		}
+
+	</script>
+
+</head>
+
+<body>
+    <script src="js/three.js"></script>
+    <script src="js/CameraControl.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
