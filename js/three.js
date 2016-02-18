@@ -27551,7 +27551,9 @@ THREE.WebGLRenderer = function ( parameters ) {
 						_this.setTexture(texture.texture, textureUnit);
 
 					} else if ( texture instanceof THREE.WebGLMultiRenderTarget ){
-
+						var textureUnits = [];
+						debugger;
+						_this.setMultiTextures(texture.textures, textureUnits);
 					} else {
 
 						_this.setTexture( texture, textureUnit );

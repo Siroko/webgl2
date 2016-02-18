@@ -21,6 +21,7 @@ var cubeGeom;
 
 var quadGeom;
 var quadMesh;
+var mrt;
 
 function setup(){
 
@@ -53,7 +54,14 @@ function setup(){
     setQuad();
     render();
 
-    var mrt = new THREE.WebGLMultiRenderTarget();
+    mrt = new THREE.WebGLMultiRenderTarget( {
+        "diffuse" : {
+            "bla" : "blahblah"
+        },
+        "normal" : {
+            "bla" : "blahblah"
+        }
+    } );
 
 }
 
