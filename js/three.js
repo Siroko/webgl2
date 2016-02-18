@@ -27552,7 +27552,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 					} else if ( texture instanceof THREE.WebGLMultiRenderTarget ){
 						var textureUnits = [];
-						debugger;
+						
 						_this.setMultiTextures(texture.textures, textureUnits);
 					} else {
 

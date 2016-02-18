@@ -101,9 +101,10 @@ function setPrimitives( position, color ){
 
         uniforms: {
 
-            uColor     : { type: "v4", value: color },
-            uNear     : { type: "f", value: camera.near },
-            uFar     : { type: "f", value: camera.far }
+            uColor      : { type: "v4", value: color },
+            uNear       : { type: "f", value: camera.near },
+            uFar        : { type: "f", value: camera.far },
+            umrt        : { type: "t", value: mrt }
 
         },
 
