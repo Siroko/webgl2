@@ -27548,7 +27548,9 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 					} else if ( texture instanceof THREE.WebGLRenderTarget ) {
 
-						_this.setTexture( texture.texture, textureUnit );
+						_this.setTexture(texture.texture, textureUnit);
+
+					} else if ( texture instanceof THREE.WebGLMultiRenderTarget ){
 
 					} else {
 
@@ -27998,6 +28000,39 @@ THREE.WebGLRenderer = function ( parameters ) {
 	}
 
 	this.setTexture = function ( texture, slot ) {
+
+		var textureProperties = properties.get( texture );
+
+		if ( texture.version > 0 && textureProperties.__version !== texture.version ) {
+
+			var image = texture.image;
+
+			if ( image === undefined ) {
+
+				console.warn( 'THREE.WebGLRenderer: Texture marked for update but image is undefined', texture );
+				return;
+
+			}
+
+			if ( image.complete === false ) {
+
+				console.warn( 'THREE.WebGLRenderer: Texture marked for update but image is incomplete', texture );
+				return;
+
+			}
+
+			uploadTexture( textureProperties, texture, slot );
+
+			return;
+
+		}
+
+		state.activeTexture( _gl.TEXTURE0 + slot );
+		state.bindTexture( _gl.TEXTURE_2D, textureProperties.__webglTexture );
+
+	};
+
+	this.setMultiTextures = function ( textures, slots ) {
 
 		var textureProperties = properties.get( texture );
 

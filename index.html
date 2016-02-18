@@ -69,14 +69,14 @@
 		void main()	{
 			vec4 color = texture2D( uDiffuse, vUv );
 			gl_FragColor = vec4(vec3(color.rgb), 1.0);
-		}
-
+	    }
 	</script>
 
 </head>
 
 <body>
     <script src="js/three.js"></script>
+    <script src="js/WebGLMultiRenderTarget.js"></script>
     <script src="js/CameraControl.js"></script>
     <script src="js/main.js"></script>
 </body>

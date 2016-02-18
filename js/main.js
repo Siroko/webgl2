@@ -53,6 +53,8 @@ function setup(){
     setQuad();
     render();
 
+    var mrt = new THREE.WebGLMultiRenderTarget();
+
 }
 
 function setGLContext(){
