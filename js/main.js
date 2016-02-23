@@ -12,16 +12,26 @@ var sceneDeferred;
 var cameraControl;
 
 var scale = 1;
-var diffuseRT   = getRenderTarget( window.innerWidth * scale, window.innerHeight * scale );
-var normalRT    = getRenderTarget( window.innerWidth * scale, window.innerHeight * scale );
-var depthRT     = getRenderTarget( window.innerWidth * scale, window.innerHeight * scale );
-var shadowRT    = getRenderTarget( window.innerWidth * scale, window.innerHeight * scale );
+
+var diffuseRT;
+var normalRT;
+var depthRT;
+var shadowRT;
+
+var diffuseTexture;
+var normalTexture;
+var depthTexture;
+var shadowTexture;
+
+var gBufferMRT;
+var gBufferRenderTarget;
+
+var tx = [];
 
 var cubeGeom;
 
 var quadGeom;
 var quadMesh;
-var mrt;
 
 function setup(){
 
@@ -52,20 +62,19 @@ function setup(){
     }
 
     setQuad();
+    setTexturesMRT();
+    gBufferMRT = webGL_createMRTFramebuffer( tx );
+
+    gBufferRenderTarget = new THREE.WebGLRenderTarget( 2048, 2048 );
+    gBufferRenderTarget.__webglFramebuffer = gBufferMRT;
+    gBufferRenderTarget.__webglInit = true;
+    gBufferRenderTarget._needsUpdate = false;
+
     render();
-
-    mrt = new THREE.WebGLMultiRenderTarget( {
-        "diffuse" : {
-            "bla" : "blahblah"
-        },
-        "normal" : {
-            "bla" : "blahblah"
-        }
-    } );
-
 }
 
 function setGLContext(){
+    console.log('creating context');
     gl = canvas.getContext( 'webgl2', { antialias: false } );
     if ( !gl ) gl = canvas.getContext( 'experimental-webgl2', { antialias: false } );
 }
@@ -103,8 +112,7 @@ function setPrimitives( position, color ){
 
             uColor      : { type: "v4", value: color },
             uNear       : { type: "f", value: camera.near },
-            uFar        : { type: "f", value: camera.far },
-            umrt        : { type: "t", value: mrt }
+            uFar        : { type: "f", value: camera.far }
 
         },
 
@@ -114,7 +122,7 @@ function setPrimitives( position, color ){
 
     } );
 
-    cubeGeom = new THREE.BoxGeometry( 5, 5, 5, 2, 2, 2 );
+    cubeGeom = new THREE.BoxGeometry( 5, 5, 5, 1, 1, 1 );
 
     for ( var i = 0; i < 100; i++ ) {
 
@@ -123,10 +131,6 @@ function setPrimitives( position, color ){
         cubeMesh.position.set( ( position.x + Math.random() * 2 - 1 ), position.y + ( Math.random() * 2 - 1 ), position.z + ( Math.random() * 2 - 1 ) );
         scene.add( cubeMesh );
     }
-
-}
-
-function setShaders(){
 
 }
 
@@ -150,23 +154,92 @@ function resize( e ){
     canvas.height = window.innerHeight;
 }
 
-function passMRT(){
-    renderer.render( scene, camera, diffuseRT );
+function setTexturesMRT(){
+
+    diffuseTexture = webGL_createTexture( 2048, gl.RGBA, gl.NEAREST, gl.NEAREST, gl.FLOAT, true );
+    normalTexture = webGL_createTexture( 2048, gl.RGBA, gl.NEAREST, gl.NEAREST, gl.FLOAT, true );
+    depthTexture = webGL_createTexture( 2048, gl.RGBA, gl.NEAREST, gl.NEAREST, gl.FLOAT, true );
+    shadowTexture = webGL_createTexture( 2048, gl.RGBA, gl.NEAREST, gl.NEAREST, gl.FLOAT, true );
+
+    tx[0] = diffuseTexture;
+    tx[1] = normalTexture;
+    tx[2] = depthTexture;
+    tx[3] = shadowTexture;
+
+    diffuseRT = new THREE.Texture();
+    diffuseRT.__webglTexture = diffuseTexture;
+    diffuseRT.__webglInit = true;
+    diffuseRT._needsUpdate = false;
+
+    normalRT = new THREE.Texture();
+    normalRT.__webglTexture = normalTexture;
+    normalRT.__webglInit = true;
+    normalRT._needsUpdate = false;
+
+    depthRT = new THREE.Texture();
+    depthRT.__webglTexture = depthTexture;
+    depthRT.__webglInit = true;
+    depthRT._needsUpdate = false;
+
+    shadowRT = new THREE.Texture();
+    shadowRT.__webglTexture = shadowTexture;
+    shadowRT.__webglInit = true;
+    shadowRT._needsUpdate = false;
+
 }
 
-function getRenderTarget( w, h, linear, depth ){
+function passMRT(){
 
-    var renderTarget = new THREE.WebGLRenderTarget( w, h, {
-        wrapS           : THREE.RepeatWrapping,
-        wrapT           : THREE.RepeatWrapping,
-        minFilter       : linear ? THREE.LinearFilter : THREE.NearestFilter,
-        magFilter       : linear ? THREE.LinearFilter : THREE.NearestFilter,
-        format          : THREE.RGBAFormat,
-        type            : THREE.FloatType,
-        stencilBuffer   : false
-    } );
+    renderer.render( scene, camera, gBufferRenderTarget );
+}
 
-    return renderTarget;
+function webGL_createTexture(textureSize, format, maxFilter, minFilter, type, unBind, data) {
+
+    var texture = gl.createTexture();
+    texture.size = textureSize;
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, textureSize, textureSize, 0, format, type, data);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, maxFilter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, minFilter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    if (unBind) gl.bindTexture(gl.TEXTURE_2D, null);
+
+    return texture;
+}
+
+//Function used to create a MRT buffer
+function webGL_createMRTFramebuffer( textures ) {
+
+    var frameData = gl.createFramebuffer();
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, frameData);
+    frameData.size = textures[0].size;
+
+    var renderbuffer = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, textures[0].size, textures[0].size);
+
+    var attach = [
+        gl.COLOR_ATTACHMENT0,
+        gl.COLOR_ATTACHMENT1,
+        gl.COLOR_ATTACHMENT2,
+        gl.COLOR_ATTACHMENT3
+    ];
+
+    for(var i = 0; i < textures.length; i++)  gl.framebufferTexture2D(gl.FRAMEBUFFER, attach[i], gl.TEXTURE_2D, textures[i], 0);
+
+    gl.drawBuffers([
+        gl.COLOR_ATTACHMENT0, // gl_FragData[0]
+        gl.COLOR_ATTACHMENT1, // gl_FragData[1]
+        gl.COLOR_ATTACHMENT2, // gl_FragData[2]
+        gl.COLOR_ATTACHMENT3  // gl_FragData[3]
+    ]);
+
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+
+    return frameData;
 }
 
 setup();

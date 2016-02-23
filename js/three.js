@@ -27550,10 +27550,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 						_this.setTexture(texture.texture, textureUnit);
 
-					} else if ( texture instanceof THREE.WebGLMultiRenderTarget ){
-						var textureUnits = [];
-						
-						_this.setMultiTextures(texture.textures, textureUnits);
 					} else {
 
 						_this.setTexture( texture, textureUnit );
@@ -29768,7 +29764,7 @@ THREE.WebGLProgram = ( function () {
 		} else {
 
 			prefixVertex = [
-
+				'#version 300 es',
 				'precision ' + parameters.precision + ' float;',
 				'precision ' + parameters.precision + ' int;',
 
@@ -29826,9 +29822,9 @@ THREE.WebGLProgram = ( function () {
 				'uniform mat3 normalMatrix;',
 				'uniform vec3 cameraPosition;',
 
-				'attribute vec3 position;',
-				'attribute vec3 normal;',
-				'attribute vec2 uv;',
+				'in vec3 position;',
+				'in vec3 normal;',
+				'in vec2 uv;',
 
 				'#ifdef USE_COLOR',
 
@@ -29874,7 +29870,7 @@ THREE.WebGLProgram = ( function () {
 
 
 			prefixFragment = [
-
+				'#version 300 es',
 				customExtensions,
 
 				'precision ' + parameters.precision + ' float;',

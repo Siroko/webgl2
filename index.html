@@ -6,9 +6,9 @@
     <link rel="stylesheet" href="css/main.css" />
 
     <script id="vsGBuffer" type="x-shader/x-vertex">
-		varying vec2 vUv;
-        varying vec3 vNormal;
-        varying float vDepth;
+		out vec2 vUv;
+        out vec3 vNormal;
+        out float vDepth;
 
         uniform float uNear;
         uniform float uFar;
@@ -32,24 +32,24 @@
 	</script>
 
     <script id="fsGBuffer" type="x-shader/x-fragment">
-
+        out vec4 my_FragData[4];
         uniform vec4 uColor;
 
-        varying vec2 vUv;
-        varying vec3 vNormal;
-        varying float vDepth;
+        in vec2 vUv;
+        in vec3 vNormal;
+        in float vDepth;
 
 		void main()	{
-			gl_FragColor = vec4( vNormal.r * uColor.r * vDepth, vNormal.g * uColor.g * vDepth, vNormal.b * uColor.b * vDepth, 1.0);
-			gl_FragColor = vec4( vNormal, 1.0);
-			gl_FragColor = vec4( uColor );
-			gl_FragColor = vec4( vDepth, vDepth, vDepth, 1.0);
+			my_FragData[0] = vec4( uColor );
+			my_FragData[1] = vec4( vNormal, 1.0);
+			my_FragData[2] = vec4( vDepth, vDepth, vDepth, 1.0);
+			my_FragData[3] = vec4( vDepth, vDepth, vDepth, 1.0);
 		}
 
 	</script>
 
     <script id="vsDeferredShader" type="x-shader/x-vertex">
-		varying vec2 vUv;
+		out vec2 vUv;
 
 		void main()	{
             vUv = uv;
@@ -63,12 +63,14 @@
 		uniform sampler2D uDiffuse;
         uniform sampler2D uNormal;
         uniform sampler2D uDepth;
+        uniform sampler2D uShadow;
 
-        varying vec2 vUv;
+        in vec2 vUv;
+        out vec4 fragmentColor;
 
 		void main()	{
-			vec4 color = texture2D( uDiffuse, vUv );
-			gl_FragColor = vec4(vec3(color.rgb), 1.0);
+			vec4 color = texture( uDiffuse, vUv );
+			fragmentColor = vec4(vec3(color.rgb), 1.0);
 	    }
 	</script>
 
