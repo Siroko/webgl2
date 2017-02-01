@@ -5,81 +5,28 @@
     <title>WebGL2</title>
     <link rel="stylesheet" href="css/main.css" />
 
-    <script id="vsGBuffer" type="x-shader/x-vertex">
-		out vec2 vUv;
-        out vec3 vNormal;
-        out float vDepth;
-
-        uniform float uNear;
-        uniform float uFar;
+    <script id="vsSimpleQuad" type="x-shader/x-vertex">#version 300 es
+        in vec4 position;
 
         void main() {
-
-            vUv = uv;
-            vNormal = normalize( normalMatrix * normal );
-
-            // this will transform the vertex into eyespace
-            vec4 viewPosition = vec4( modelViewMatrix * vec4( position, 1.0 ) );
-            vDepth = 1. - ( uNear + viewPosition.z ) / ( uNear - uFar );
-            vDepth = -viewPosition.z;
-            // will map near..far to 0..1
-            vDepth = (-viewPosition.z - uNear ) / ( uFar - uNear );
-
-            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-
+            gl_Position =  position;
         }
 
 	</script>
 
-    <script id="fsGBuffer" type="x-shader/x-fragment">
-        out vec4 my_FragData[4];
-        uniform vec4 uColor;
-
-        in vec2 vUv;
-        in vec3 vNormal;
-        in float vDepth;
+    <script id="fsDrawMRT" type="x-shader/x-fragment">#version 300 es
+        precision highp float;
+        out vec4 fragData;
 
 		void main()	{
-			my_FragData[0] = vec4( uColor );
-			my_FragData[1] = vec4( vNormal, 1.0);
-			my_FragData[2] = vec4( vDepth, vDepth, vDepth, 1.0);
-			my_FragData[3] = vec4( vDepth, vDepth, vDepth, 1.0);
+			fragData = vec4( 1.0, 1.0, 0.0 , 1.0 );
 		}
 
-	</script>
-
-    <script id="vsDeferredShader" type="x-shader/x-vertex">
-		out vec2 vUv;
-
-		void main()	{
-            vUv = uv;
-			gl_Position = vec4( position, 1.0 );
-		}
-
-	</script>
-
-    <script id="fsDeferredShader" type="x-shader/x-fragment">
-
-		uniform sampler2D uDiffuse;
-        uniform sampler2D uNormal;
-        uniform sampler2D uDepth;
-        uniform sampler2D uShadow;
-
-        in vec2 vUv;
-        out vec4 fragmentColor;
-
-		void main()	{
-			vec4 color = texture( uDiffuse, vUv );
-			fragmentColor = vec4(vec3(color.rgb), 1.0);
-	    }
 	</script>
 
 </head>
 
 <body>
-    <script src="js/three.js"></script>
-    <script src="js/WebGLMultiRenderTarget.js"></script>
-    <script src="js/CameraControl.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

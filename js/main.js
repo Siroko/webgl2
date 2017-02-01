@@ -4,34 +4,20 @@
 
 var gl;
 var canvas;
-var renderer;
-var camera;
-var cameraOrto;
-var scene;
-var sceneDeferred;
-var cameraControl;
 
 var scale = 1;
-
-var diffuseRT;
-var normalRT;
-var depthRT;
-var shadowRT;
+var programDrawPositions;
 
 var diffuseTexture;
 var normalTexture;
 var depthTexture;
 var shadowTexture;
 
-var gBufferMRT;
-var gBufferRenderTarget;
-
 var tx = [];
-
-var cubeGeom;
-
-var quadGeom;
-var quadMesh;
+var frameD;
+var bufferQuad;
+var vao;
+var positionAttributeLocation;
 
 function setup(){
 
@@ -40,106 +26,105 @@ function setup(){
 
     addEvents();
     setGLContext();
-
-    renderer = new THREE.WebGLRenderer( {
-        canvas: canvas,
-        context: gl
-    } );
-
-    camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 30 );
-    cameraControl = new CameraControl( camera, new THREE.Vector3(0, 0, 0) );
-
-    cameraOrto = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 10000 );
-
-    scene = new THREE.Scene();
-    sceneDeferred = new THREE.Scene();
-
-    var size = 15;
-    var halfSize = size * 0.5;
-
-    for (var i = 0; i < 10; i++) {
-        setPrimitives( new THREE.Vector3( Math.random() * size - halfSize , Math.random() * size - halfSize, Math.random() *  size - halfSize ), new THREE.Vector4( Math.random(), Math.random(), Math.random(), 1 ) );
-    }
-
+    createPrograms();
+    // setTexturesMRT();
+   // frameD = webGL_createMRTFramebuffer(tx);
     setQuad();
-    setTexturesMRT();
-    gBufferMRT = webGL_createMRTFramebuffer( tx );
-
-    gBufferRenderTarget = new THREE.WebGLRenderTarget( 2048, 2048 );
-    gBufferRenderTarget.__webglFramebuffer = gBufferMRT;
-    gBufferRenderTarget.__webglInit = true;
-    gBufferRenderTarget._needsUpdate = false;
 
     render();
 }
 
 function setGLContext(){
     console.log('creating context');
-    gl = canvas.getContext( 'webgl2', { antialias: false } );
-    if ( !gl ) gl = canvas.getContext( 'experimental-webgl2', { antialias: false } );
+    gl = canvas.getContext( 'webgl2', { antialias: true } );
+    if ( !gl ) gl = canvas.getContext( 'experimental-webgl2', { antialias: true } );
+}
+
+function createShader (gl, sourceCode, type) {
+    // Compiles either a shader of type gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
+    var shader = gl.createShader( type );
+    gl.shaderSource( shader, sourceCode );
+    gl.compileShader( shader );
+
+    if ( !gl.getShaderParameter(shader, gl.COMPILE_STATUS) ) {
+        var info = gl.getShaderInfoLog( shader );
+        throw 'Could not compile WebGL program. \n\n' + info;
+    }
+    return shader;
+}
+
+function createPrograms(){
+
+    programDrawPositions = gl.createProgram();
+
+    var vs = createShader( gl, document.getElementById( 'vsSimpleQuad' ).textContent, gl.VERTEX_SHADER );
+    gl.attachShader( programDrawPositions, vs  );
+
+    var fs = createShader( gl, document.getElementById( 'fsDrawMRT' ).textContent, gl.FRAGMENT_SHADER );
+    gl.attachShader( programDrawPositions, fs );
+
+    gl.linkProgram( programDrawPositions );
+
+    if ( !gl.getProgramParameter( programDrawPositions, gl.LINK_STATUS ) ) {
+        var info = gl.getProgramInfoLog( programDrawPositions );
+        throw 'Could not compile WebGL program. \n\n' + info;
+    }
+
 }
 
 function setQuad(){
 
-    var material = new THREE.ShaderMaterial( {
+    positionAttributeLocation = gl.getAttribLocation(programDrawPositions, "position");
 
-        uniforms: {
+    var vertices = new Float32Array([
+        -1, -1, 0,
+         1, -1, 0,
+        -1,  1, 0,
+        -1,  1, 0,
+         1, -1, 0,
+         1,  1, 0
+    ] );
 
-            uDiffuse    : { type: "t", value: diffuseRT },
-            uNormal     : { type: "t", value: normalRT },
-            uDepth      : { type: "t", value: depthRT },
-            uShadow     : { type: "t", value: shadowRT }
+    bufferQuad = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufferQuad);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-        },
+    vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
 
-        vertexShader    : document.getElementById( 'vsDeferredShader' ).textContent,
-        fragmentShader  : document.getElementById( 'fsDeferredShader' ).textContent,
-        side            : THREE.DoubleSide
+    gl.enableVertexAttribArray(positionAttributeLocation);
 
-    } );
+    var size = 3;          // 3 components per iteration
+    var type = gl.FLOAT;   // the data is 32bit floats
+    var normalize = false; // don't normalize the data
+    var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+    var offset = 0;        // start at the beginning of the buffer
+    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
 
-    quadGeom = new THREE.PlaneBufferGeometry( 2, 2, 1, 1 );
-    quadMesh = new THREE.Mesh( quadGeom, material );
-
-    sceneDeferred.add( quadMesh );
 }
 
 function setPrimitives( position, color ){
-
-    var mat = new THREE.ShaderMaterial( {
-
-        uniforms: {
-
-            uColor      : { type: "v4", value: color },
-            uNear       : { type: "f", value: camera.near },
-            uFar        : { type: "f", value: camera.far }
-
-        },
-
-        vertexShader    : document.getElementById( 'vsGBuffer' ).textContent,
-        fragmentShader  : document.getElementById( 'fsGBuffer' ).textContent,
-        side            : THREE.DoubleSide
-
-    } );
-
-    cubeGeom = new THREE.BoxGeometry( 5, 5, 5, 1, 1, 1 );
-
-    for ( var i = 0; i < 100; i++ ) {
-
-        var cubeMesh = new THREE.Mesh( cubeGeom, mat );
-        cubeMesh.scale.set( Math.random(), Math.random(), Math.random() );
-        cubeMesh.position.set( ( position.x + Math.random() * 2 - 1 ), position.y + ( Math.random() * 2 - 1 ), position.z + ( Math.random() * 2 - 1 ) );
-        scene.add( cubeMesh );
-    }
 
 }
 
 function render(){
 
-    cameraControl.update();
     requestAnimationFrame( render );
-    passMRT();
-    renderer.render( sceneDeferred, camera );
+
+    // Clear the canvas
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // Tell it to use our program (pair of shaders)
+    gl.useProgram(programDrawPositions);
+
+    // Bind the attribute/buffer set we want.
+    gl.bindVertexArray(vao);
+
+    var primitiveType = gl.TRIANGLES;
+    var offset = 0;
+    var count = 6;
+    gl.drawArrays(primitiveType, offset, count);
 }
 
 function addEvents(){
@@ -156,44 +141,19 @@ function resize( e ){
 
 function setTexturesMRT(){
 
-    diffuseTexture = webGL_createTexture( 2048, gl.RGBA, gl.NEAREST, gl.NEAREST, gl.FLOAT, true );
-    normalTexture = webGL_createTexture( 2048, gl.RGBA, gl.NEAREST, gl.NEAREST, gl.FLOAT, true );
-    depthTexture = webGL_createTexture( 2048, gl.RGBA, gl.NEAREST, gl.NEAREST, gl.FLOAT, true );
-    shadowTexture = webGL_createTexture( 2048, gl.RGBA, gl.NEAREST, gl.NEAREST, gl.FLOAT, true );
+    diffuseTexture = createTexture( 2048, gl.RGBA, gl.NEAREST, gl.NEAREST, gl.FLOAT, true );
+    normalTexture = createTexture( 2048, gl.RGBA, gl.NEAREST, gl.NEAREST, gl.FLOAT, true );
+    depthTexture = createTexture( 2048, gl.RGBA, gl.NEAREST, gl.NEAREST, gl.FLOAT, true );
+    shadowTexture = createTexture( 2048, gl.RGBA, gl.NEAREST, gl.NEAREST, gl.FLOAT, true );
 
     tx[0] = diffuseTexture;
     tx[1] = normalTexture;
     tx[2] = depthTexture;
     tx[3] = shadowTexture;
 
-    diffuseRT = new THREE.Texture();
-    diffuseRT.__webglTexture = diffuseTexture;
-    diffuseRT.__webglInit = true;
-    diffuseRT._needsUpdate = false;
-
-    normalRT = new THREE.Texture();
-    normalRT.__webglTexture = normalTexture;
-    normalRT.__webglInit = true;
-    normalRT._needsUpdate = false;
-
-    depthRT = new THREE.Texture();
-    depthRT.__webglTexture = depthTexture;
-    depthRT.__webglInit = true;
-    depthRT._needsUpdate = false;
-
-    shadowRT = new THREE.Texture();
-    shadowRT.__webglTexture = shadowTexture;
-    shadowRT.__webglInit = true;
-    shadowRT._needsUpdate = false;
-
 }
 
-function passMRT(){
-
-    renderer.render( scene, camera, gBufferRenderTarget );
-}
-
-function webGL_createTexture(textureSize, format, maxFilter, minFilter, type, unBind, data) {
+function createTexture(textureSize, format, maxFilter, minFilter, type, unBind, data) {
 
     var texture = gl.createTexture();
     texture.size = textureSize;
