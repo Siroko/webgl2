@@ -23,10 +23,11 @@ export default class Renderer{
 
     }
 
-    render( stack, camera, target = null ){
+    render( stack, target = null ){
 
         let gl = this.gl;
-        // Clear the canvas
+
+        // Cleaning canvas on black (so fsr)
         gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -44,6 +45,11 @@ export default class Renderer{
                     cmd.vbos.push( vbo );
                 }
 
+                for( let uniformID in cmd.uniforms ){
+                    let uniformAllocation = this.allocateUniform( uniformID, program );
+                    cmd.uniforms[uniformID].allocation = uniformAllocation;
+                }
+
                 cmd.initialized = true;
 
             }
@@ -55,6 +61,11 @@ export default class Renderer{
                 let vbo = cmd.vbos[j];
                 // Bind the attribute/buffer set we want.
                 gl.bindVertexArray( vbo );
+            }
+
+            for( let uID in cmd.uniforms ){
+                let uniform = cmd.uniforms[ uID ];
+                gl.uniformMatrix4fv( uniform.allocation, false, uniform.value )  // for mat4 or mat4 array
             }
 
             let primitiveType = gl.LINE_STRIP;
@@ -141,5 +152,12 @@ export default class Renderer{
 
         return vao;
 
+    }
+
+    allocateUniform( uniformId, program ){
+
+        let gl = this.gl;
+        let location = gl.getUniformLocation(program, uniformId);
+        return location;
     }
 }

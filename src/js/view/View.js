@@ -33,6 +33,7 @@ export default class View {
         document.getElementById('container').appendChild( this.renderer.domElement );
         this.camera = new Camera( 30, window.innerWidth / window.innerHeight, 1, 800 );
         this.cameraControl = new CameraControl( this.camera, [ 0, 0, 0 ] );
+
         this.stack = new CommandStack();
         this.plane = new PlaneGeometry( 2, 2, 30, 30 );
         this.command = new GLCommand({
@@ -41,6 +42,9 @@ export default class View {
             fs: fs,
             attributes: {
                 'position' : { size: 3, value: this.plane.positions }
+            },
+            uniforms: {
+                'viewMatrix' : { type: 'm4', value: this.camera.matrix }
             },
             count: this.plane.positions.length / 3
         });
@@ -53,7 +57,8 @@ export default class View {
 
         window.requestAnimationFrame( this.renderHandler );
 
-        this.renderer.render( this.stack, this.camera );
+        this.cameraControl.update();
+        this.renderer.render( this.stack );
 
     }
 
