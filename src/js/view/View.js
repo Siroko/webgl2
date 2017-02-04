@@ -3,36 +3,57 @@
  */
 'use strict'
 
+import {GL_LINES}       from '../gl/core/GLCommand';
+
+import Renderer         from '../gl/rendering/Renderer';
 import Camera           from '../gl/object/Camera';
 import CameraControl    from '../gl/utils/CameraControl';
-import Stack            from '../gl/core/Stack';
+import CommandStack     from '../gl/core/CommandStack';
+import GLCommand        from '../gl/core/GLCommand';
 import PlaneGeometry    from '../gl/object/primitives/PlaneGeometry';
+
+import vs               from '../gl/rendering/shaders/basic/vs.glsl';
+import fs               from '../gl/rendering/shaders/basic/fs.glsl';
 
 export default class View {
 
     constructor( model ) {
 
         this.model = model;
+
+        this.renderHandler = this.render.bind( this );
         this.setup();
+        this.render();
+
     }
 
     setup(){
 
+        this.renderer = new Renderer({ width: window.innerWidth, height: window.innerHeight });
+        document.getElementById('container').appendChild( this.renderer.domElement );
         this.camera = new Camera( 30, window.innerWidth / window.innerHeight, 1, 800 );
-        this.cameraControl = new CameraControl( this.camera, [ 0, 1, 0 ] );
+        this.cameraControl = new CameraControl( this.camera, [ 0, 0, 0 ] );
+        this.stack = new CommandStack();
+        this.plane = new PlaneGeometry( 2, 2, 2, 2 );
+        this.command = new GLCommand({
+            primitive: GL_LINES,
+            vs: vs,
+            fs: fs,
+            attributes: {
+                'position' : { size: 3, value: this.plane.positions }
+            },
+            count: 2 * 2 * 3
+        });
 
-        this.stack = new Stack();
-
-        this.createGeometries();
+        this.stack.add( this.command );
 
     }
 
-    createGeometries(){
+    render(){
 
-        this.floor = new PlaneGeometry( 30, 100, 2, 2 );
-        this.floor.position = [0, -1, 0];
-        this.floor.rotation = [Math.PI * 1.5, 0, 0];
-        this.stack.add( this.floor );
+        window.requestAnimationFrame( this.renderHandler );
+
+        this.renderer.render( this.stack, this.camera );
 
     }
 
