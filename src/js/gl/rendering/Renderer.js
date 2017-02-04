@@ -19,6 +19,7 @@ export default class Renderer{
 
         this.domElement.width = w;
         this.domElement.height = h;
+        this.gl.viewport(0, 0, w, h);
 
     }
 
@@ -56,7 +57,7 @@ export default class Renderer{
                 gl.bindVertexArray( vbo );
             }
 
-            let primitiveType = gl.LINES;
+            let primitiveType = gl.LINE_STRIP;
             let offset = 0;
             let count = cmd.count;
             gl.drawArrays( primitiveType, offset, count );

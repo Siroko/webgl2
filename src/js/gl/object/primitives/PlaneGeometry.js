@@ -19,7 +19,7 @@ export default class PlaneGeometry extends Object3D {
             for (let xx = 0; xx < tWidth; xx++) {
 
                  let normX = xx / tWidth * 2 - 1;
-                 let normY = yy / tHeight * 2 + 1;
+                 let normY = yy / tHeight * 2 - 1;
 
                 let normXplusOne = (xx + 1) / tWidth * 2 -1;
                 let normYplusOne = (yy + 1) / tHeight * 2 - 1;

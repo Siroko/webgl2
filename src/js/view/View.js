@@ -34,7 +34,7 @@ export default class View {
         this.camera = new Camera( 30, window.innerWidth / window.innerHeight, 1, 800 );
         this.cameraControl = new CameraControl( this.camera, [ 0, 0, 0 ] );
         this.stack = new CommandStack();
-        this.plane = new PlaneGeometry( 2, 2, 2, 2 );
+        this.plane = new PlaneGeometry( 2, 2, 30, 30 );
         this.command = new GLCommand({
             primitive: GL_LINES,
             vs: vs,
@@ -42,7 +42,7 @@ export default class View {
             attributes: {
                 'position' : { size: 3, value: this.plane.positions }
             },
-            count: 2 * 2 * 3
+            count: this.plane.positions.length / 3
         });
 
         this.stack.add( this.command );
