@@ -1,7 +1,17 @@
 /**
- * Created by sirok on 04/02/2017.
+ * Created by siroko on 04/02/2017.
+ *
+ * This class will create and manage all the gl states for drawing GLCommands stacks.
+ *
  */
+
 'use strict'
+
+import {GL_LINES_PRIMITIVE}         from '../core/Constants';
+import {GL_LINE_STRIP_PRIMITIVE}    from '../core/Constants';
+import {GL_TRIANGLES_PRIMITIVE}     from '../core/Constants';
+import {GL_FLOAT_TYPE}              from '../core/Constants';
+import {GL_HALF_FLOAT_TYPE}         from '../core/Constants';
 
 export default class Renderer{
 
@@ -15,6 +25,11 @@ export default class Renderer{
 
     }
 
+    /**
+     * Sets the size of the context viewport and the canvas object
+     * @param w
+     * @param h
+     */
     setSize( w, h ){
 
         this.domElement.width = w;
@@ -23,6 +38,12 @@ export default class Renderer{
 
     }
 
+    /**
+     * Method that will walk all the stack and will draw each command to the screen or to the provided target.
+     * First time each command will be executed, the method will allocate the needed uniforms, VBOs, FBOs etc..
+     * @param stack
+     * @param target
+     */
     render( stack, target = null ){
 
         let gl = this.gl;
@@ -41,16 +62,16 @@ export default class Renderer{
                 cmd.program = program;
 
                 for( let prop in cmd.attributes ){
-                    let vbo = this.createAttributeArray( prop, cmd.attributes[ prop ].value, cmd.program, cmd.attributes[ prop ].size );
+                    let vbo = this.createAttributeArray( prop, cmd.attributes[ prop ].value, cmd.program, cmd.attributes[ prop ].size, cmd.attributes[ prop ].type );
                     cmd.vbos.push( vbo );
                 }
 
                 for( let uniformID in cmd.uniforms ){
-                    let uniformAllocation = this.allocateUniform( uniformID, program );
-                    cmd.uniforms[uniformID].allocation = uniformAllocation;
+                    cmd.uniforms[ uniformID ].allocation = gl.getUniformLocation( program, uniformID );
                 }
 
                 cmd.initialized = true;
+                cmd.GLPrimitive = this.getGLPrimitive( cmd.primitive );
 
             }
 
@@ -58,18 +79,16 @@ export default class Renderer{
             gl.useProgram(cmd.program);
 
             for (let j = 0; j < cmd.vbos.length; j++) {
-                let vbo = cmd.vbos[j];
                 // Bind the attribute/buffer set we want.
-                gl.bindVertexArray( vbo );
+                gl.bindVertexArray( cmd.vbos[j] );
             }
 
             for( let uID in cmd.uniforms ){
-                let uniform = cmd.uniforms[ uID ];
-                gl.uniformMatrix4fv( uniform.allocation, false, uniform.value )  // for mat4 or mat4 array
+                gl.uniformMatrix4fv( cmd.uniforms[ uID ].allocation, false, cmd.uniforms[ uID ].value );  // for mat4 or mat4 array
             }
 
-            let primitiveType = gl.LINE_STRIP;
-            let offset = 0;
+            let primitiveType = cmd.GLPrimitive;
+            let offset = cmd.offset || 0;
             let count = cmd.count;
             gl.drawArrays( primitiveType, offset, count );
 
@@ -128,6 +147,21 @@ export default class Renderer{
 
     }
 
+    /**
+     * This method provides the position attribute location on the GPU
+     * to be bound later on before draw the elements
+     *
+     * @param idAttribute
+     * @param data
+     * @param program
+     * @param size
+     * @param type
+     * @param normalize
+     * @param stride
+     * @param offset
+     * @returns {*}
+     */
+
     createAttributeArray( idAttribute, data, program, size, type, normalize, stride,  offset ){
 
         let gl = this.gl;
@@ -142,11 +176,11 @@ export default class Renderer{
 
         gl.enableVertexAttribArray( positionAttributeLocation );
 
-        let _size = size || 3;                  // components per iteration
-        let _type = type || gl.FLOAT;           // the data type
-        let _normalize = normalize || false;    // normalize the data
-        let _stride = stride || 0;              // 0 = move forward size * sizeof(type) each iteration to get the next position
-        let _offset = offset || 0;              // start at the beginning of the buffer
+        let _size = size || 3;                          // components per iteration
+        let _type = this.getGLType( type ) || gl.FLOAT; // the data type
+        let _normalize = normalize || false;            // normalize the data
+        let _stride = stride || 0;                      // 0 = move forward size * sizeof(type) each iteration to get the next position
+        let _offset = offset || 0;                      // start at the beginning of the buffer
 
         gl.vertexAttribPointer( positionAttributeLocation, _size, _type, _normalize, _stride, _offset );
 
@@ -154,10 +188,53 @@ export default class Renderer{
 
     }
 
-    allocateUniform( uniformId, program ){
+    /**
+     * returns a GL type identifier from our internal IDs
+     * @param type
+     * @returns {*}
+     */
+    getGLType( type ){
 
         let gl = this.gl;
-        let location = gl.getUniformLocation(program, uniformId);
-        return location;
+        let glType = null;
+
+        switch( type ){
+            case GL_FLOAT_TYPE:
+                glType = gl.FLOAT;
+                break;
+            case GL_HALF_FLOAT_TYPE:
+                glType = gl.HALF_FLOAT;
+                break
+        }
+
+        return glType;
+
     }
+
+    /**
+     * returns a GL primitive identifier from our internal IDs
+     * @param primitive
+     * @returns {*}
+     */
+    getGLPrimitive( primitive ){
+
+        let gl = this.gl;
+        let glPrimitive = null;
+
+        switch( primitive ){
+            case GL_LINES_PRIMITIVE:
+                glPrimitive = gl.LINES;
+                break;
+            case GL_LINE_STRIP_PRIMITIVE:
+                glPrimitive = gl.LINE_STRIP;
+                break;
+            case GL_TRIANGLES_PRIMITIVE:
+                glPrimitive = gl.TRIANGLES;
+                break
+        }
+
+        return glPrimitive;
+
+    }
+
 }

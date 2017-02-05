@@ -3,9 +3,7 @@
  */
 'use strict'
 
-export const GL_TRIANGLES   = 'triangles';
-export const GL_LINES       = 'lines';
-export const GL_POINTS      = 'points';
+import {GL_TRIANGLES_PRIMITIVE} from './Constants';
 
 export default class GLCommand {
 
@@ -19,7 +17,7 @@ export default class GLCommand {
         this.attributes = opts.attributes;
         this.count = opts.count;
 
-        this.primitive = opts.primitive || GL_TRIANGLES;
+        this.primitive = opts.primitive || GL_TRIANGLES_PRIMITIVE;
 
         this.initialized = false;
         this.program = null;

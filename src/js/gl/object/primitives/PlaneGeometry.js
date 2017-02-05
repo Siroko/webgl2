@@ -56,7 +56,6 @@ export default class PlaneGeometry extends Object3D {
         this.count =  _positions.length / 3;
         this.positions = new Float32Array(_positions);
 
-        console.log(this.positions);
         // this.normals = this.regl.buffer( bg.attributes.normal.array );
         // this.uvs = this.regl.buffer( bg.attributes.uv.array );
 

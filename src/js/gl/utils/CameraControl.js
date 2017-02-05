@@ -16,8 +16,8 @@ export default class CameraControl {
         this.downPoint = { x : 0, y : 0 };
         this.down = false;
         this.PI = 3.14159265359;
-        this.radius = 3;
-        this.wheelDelta = 3;
+        this.radius = 1;
+        this.wheelDelta = 1;
         this.limits = { up : 0.2, down : -1.008 };
         this.mouseX = -1;
         this.mouseY= -1;
@@ -31,7 +31,7 @@ export default class CameraControl {
 
     events(){
 
-        var mouseWheelEvent = (/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel";
+        let mouseWheelEvent = (/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel";
 
         document.addEventListener( mouseWheelEvent, this.onMouseWheel.bind( this ) );
         window.addEventListener( 'mousedown', this.onMouseDown.bind( this ) );
@@ -47,7 +47,7 @@ export default class CameraControl {
     onTouchStart( e ){
 
         e.preventDefault();
-        var ev = { pageX : e.changedTouches[0].pageX, pageY: e.changedTouches[0].pageY };
+        let ev = { pageX : e.changedTouches[0].pageX, pageY: e.changedTouches[0].pageY };
         ev.preventDefault = function(){};
         this.onMouseDown( ev );
         this.touch = true;
@@ -57,7 +57,7 @@ export default class CameraControl {
     onTouchEnd( e ){
 
         e.preventDefault();
-        var ev = { pageX : e.changedTouches[0].pageX, pageY: e.changedTouches[0].pageY };
+        let ev = { pageX : e.changedTouches[0].pageX, pageY: e.changedTouches[0].pageY };
         ev.preventDefault = function(){};
         this.onMouseUp( ev );
         this.touch = false;
@@ -67,7 +67,7 @@ export default class CameraControl {
     onTouchMove( e ){
 
         e.preventDefault();
-        var ev = { pageX : e.changedTouches[ 0 ].pageX, pageY: e.changedTouches[0].pageY };
+        let ev = { pageX : e.changedTouches[ 0 ].pageX, pageY: e.changedTouches[0].pageY };
         ev.preventDefault = function(){};
         this.onMouseMove( ev );
 
@@ -75,7 +75,7 @@ export default class CameraControl {
 
     onMouseWheel(e) {
 
-        var delta = e.detail ? e.detail * -120 : e.wheelDelta;
+        let delta = e.detail ? e.detail * -120 : e.wheelDelta;
         this.wheelDelta -= delta * 0.001;
 
         this._mouseX = e.pageX;

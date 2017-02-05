@@ -98,7 +98,7 @@ export default class Object3D {
      */
     lookAt( target ){
 
-        if( target ) this._target = vec3.fromValues( target[0], target[1], target[2] );
+        /*if( target ) this._target = vec3.fromValues( target[0], target[1], target[2] );
 
         mat4.identity( this._lookAtMatrix );
         // mat4.identity( this._matrix );
@@ -106,5 +106,6 @@ export default class Object3D {
         mat4.copy( this._rotationMatrix, this._lookAtMatrix );
 
         this.updateMatrix();
+        */
     }
 }
