@@ -3,6 +3,7 @@
  */
 'use strict'
 
+import {GL_POINTS_PRIMITIVE}        from '../gl/core/Constants';
 import {GL_LINES_PRIMITIVE}         from '../gl/core/Constants';
 import {GL_LINE_STRIP_PRIMITIVE}    from '../gl/core/Constants';
 import {GL_TRIANGLES_PRIMITIVE}     from '../gl/core/Constants';
@@ -35,10 +36,11 @@ export default class View {
         this.renderer = new Renderer({ width: window.innerWidth, height: window.innerHeight });
         document.getElementById('container').appendChild( this.renderer.domElement );
         this.camera = new Camera( 80, window.innerWidth / window.innerHeight, 0.1, 800 );
+        // this.camera.position = [0,0,5];
         this.cameraControl = new CameraControl( this.camera, [ 0, 0, 0 ] );
 
         this.stack = new CommandStack();
-        this.plane = new PlaneGeometry( 2, 2, 30, 30 );
+        this.plane = new PlaneGeometry( 2, 2, 10, 10 );
         this.command = new GLCommand({
             primitive: GL_LINE_STRIP_PRIMITIVE,
             vs: vs,
@@ -48,20 +50,23 @@ export default class View {
             },
             uniforms: {
                 'modelMatrix' : { type: 'm4', value: this.plane.matrix },
-                'viewMatrix' : { type: 'm4', value: this.camera.matrix },
-                'projectionMatrix' : { type: 'm4', value: this.camera.projectionMatrix },
+                'viewMatrix' : { type: 'm4', value: this.camera.viewMatrix },
+                'viewProjectionMatrix' : { type: 'm4', value: this.camera.viewProjectionMatrix }
             },
             count: this.plane.positions.length / 3
         });
 
         this.stack.add( this.command );
 
+        console.log( this.camera.matrix);
+
     }
 
-    render(){
+    render( t ){
 
         window.requestAnimationFrame( this.renderHandler );
 
+        // this.plane.position = [ Math.sin(t * 0.001), 0, 0 ];
         this.cameraControl.update();
         this.renderer.render( this.stack );
 
@@ -69,7 +74,7 @@ export default class View {
 
     resize( w, h ){
 
-        // mat4.perspective( this.perspectiveMatrix, this.fov, w / h, this.near, this.far );
+
     }
 
 }

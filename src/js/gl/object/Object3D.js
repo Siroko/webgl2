@@ -89,7 +89,8 @@ export default class Object3D {
     updateMatrix(){
 
         mat4.identity( this._matrix );
-        mat4.multiply( this._matrix, this._translationMatrix, this._rotationMatrix );
+        mat4.multiply( this._matrix, this._translationMatrix, this._rotationMatrix, this._scaleMatrix );
+
     }
 
     /**
@@ -98,14 +99,16 @@ export default class Object3D {
      */
     lookAt( target ){
 
-        /*if( target ) this._target = vec3.fromValues( target[0], target[1], target[2] );
+        if( target ) this._target = vec3.fromValues( target[0], target[1], target[2] );
+        let eye = vec3.create();
+        vec3.subtract(eye, this._position, this._target);
 
         mat4.identity( this._lookAtMatrix );
-        // mat4.identity( this._matrix );
         mat4.lookAt( this._lookAtMatrix, this._position, this._target, this._upVector );
-        mat4.copy( this._rotationMatrix, this._lookAtMatrix );
+        mat4.identity(this._matrix);
+        mat4.copy( this._matrix, this._lookAtMatrix );
 
-        this.updateMatrix();
-        */
+        // this.updateMatrix();
+
     }
 }

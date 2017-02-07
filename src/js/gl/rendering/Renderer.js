@@ -7,6 +7,7 @@
 
 'use strict'
 
+import {GL_POINTS_PRIMITIVE}        from '../core/Constants';
 import {GL_LINES_PRIMITIVE}         from '../core/Constants';
 import {GL_LINE_STRIP_PRIMITIVE}    from '../core/Constants';
 import {GL_TRIANGLES_PRIMITIVE}     from '../core/Constants';
@@ -222,6 +223,9 @@ export default class Renderer{
         let glPrimitive = null;
 
         switch( primitive ){
+            case GL_POINTS_PRIMITIVE:
+                glPrimitive = gl.POINTS;
+                break;
             case GL_LINES_PRIMITIVE:
                 glPrimitive = gl.LINES;
                 break;

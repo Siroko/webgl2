@@ -18,7 +18,7 @@ export default class CameraControl {
         this.PI = 3.14159265359;
         this.radius = 1;
         this.wheelDelta = 1;
-        this.limits = { up : 0.2, down : -1.008 };
+        this.limits = { up : 0.2, down : 0.008 };
         this.mouseX = -1;
         this.mouseY= -1;
         this._mouseX = -1;

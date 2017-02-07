@@ -18,8 +18,8 @@ export default class PlaneGeometry extends Object3D {
         for (let yy = 0; yy < tHeight; yy++) {
             for (let xx = 0; xx < tWidth; xx++) {
 
-                 let normX = xx / tWidth * 2 - 1;
-                 let normY = yy / tHeight * 2 - 1;
+                let normX = xx / tWidth * 2 - 1;
+                let normY = yy / tHeight * 2 - 1;
 
                 let normXplusOne = (xx + 1) / tWidth * 2 -1;
                 let normYplusOne = (yy + 1) / tHeight * 2 - 1;
@@ -48,7 +48,7 @@ export default class PlaneGeometry extends Object3D {
                     0
                 ];
 
-                _positions = _positions.concat( a, b, c, c, b, d );
+                _positions = _positions.concat( a, b, c, a, c, b, d, c );
 
             }
 
