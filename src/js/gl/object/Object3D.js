@@ -54,12 +54,13 @@ export default class Object3D {
      */
     set rotation( rot ){
 
-        this._rotation = vec3.fromValues( rot[0], rot[1], rot[2] );
+        // this._rotation = vec3.fromValues( rot[0], rot[1], rot[2] );
 
         mat4.identity( this._rotationMatrix );
-        mat4.rotate( this._rotationMatrix, this._rotationMatrix, this._rotation[2], [ 0, 0, 1 ] );
-        mat4.rotate( this._rotationMatrix, this._rotationMatrix, this._rotation[1], [ 0, 1, 0 ] );
-        mat4.rotate( this._rotationMatrix, this._rotationMatrix, this._rotation[0], [ 1, 0, 0 ] );
+
+        mat4.rotate( this._rotationMatrix, this._rotationMatrix, rot[2], [ 0, 0, 1 ] );
+        mat4.rotate( this._rotationMatrix, this._rotationMatrix, rot[1], [ 0, 1, 0 ] );
+        mat4.rotate( this._rotationMatrix, this._rotationMatrix, rot[0], [ 1, 0, 0 ] );
 
         this.updateMatrix();
     }
@@ -89,7 +90,9 @@ export default class Object3D {
     updateMatrix(){
 
         mat4.identity( this._matrix );
-        mat4.multiply( this._matrix, this._translationMatrix, this._rotationMatrix, this._scaleMatrix );
+
+        mat4.multiply( this._matrix, this._scaleMatrix, this._rotationMatrix );
+        mat4.multiply( this._matrix, this._matrix, this._translationMatrix );
 
     }
 
