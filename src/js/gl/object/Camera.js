@@ -47,6 +47,10 @@ export default class Camera extends Object3D {
 
         return this._perspectiveMatrix;
     }
+    set aspect( v ){
+        this._aspect = v;
+        mat4.perspective( this._perspectiveMatrix, this._fov, this._aspect, this._near, this._far );
+    }
 
     get viewMatrix(){
 
@@ -75,8 +79,6 @@ export default class Camera extends Object3D {
         mat4.copy(this._viewMatrix, this._matrix);
         mat4.identity( this._viewProjectionMatrix );
         mat4.multiply( this._viewProjectionMatrix, this._perspectiveMatrix, this._viewMatrix );
-
-        // this.updateMatrix();
 
     }
 

@@ -1,9 +1,7 @@
-#version 300 es
-
 uniform mat4 modelMatrix;
 uniform mat4 viewProjectionMatrix;
 
-in vec3 position;
+attribute vec3 position;
 
 void main() {
 

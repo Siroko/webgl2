@@ -16,8 +16,11 @@ import CommandStack                 from '../gl/core/CommandStack';
 import GLCommand                    from '../gl/core/GLCommand';
 import PlaneGeometry                from '../gl/object/primitives/PlaneGeometry';
 
-import vs                           from '../gl/rendering/shaders/basic/vs.glsl';
-import fs                           from '../gl/rendering/shaders/basic/fs.glsl';
+import es3_vs                       from '../gl/rendering/shaders/es3/basic/vs.glsl';
+import es3_fs                       from '../gl/rendering/shaders/es3/basic/fs.glsl';
+
+import es2_vs                       from '../gl/rendering/shaders/es2/basic/vs.glsl';
+import es2_fs                       from '../gl/rendering/shaders/es2/basic/fs.glsl';
 
 export default class View {
 
@@ -42,8 +45,11 @@ export default class View {
         this.stack = new CommandStack();
         this.plane = new PlaneGeometry( 200, 200, 10, 10 );
 
+        let vs = this.renderer.isWebGL2 ? es3_vs : es2_vs;
+        let fs = this.renderer.isWebGL2 ? es3_fs : es2_fs;
+
         this.command = new GLCommand({
-            primitive: GL_LINE_STRIP_PRIMITIVE,
+            primitive: GL_POINTS_PRIMITIVE,
             vs: vs,
             fs: fs,
             attributes: {
@@ -57,8 +63,6 @@ export default class View {
         });
 
         this.stack.add( this.command );
-
-        console.log( this.camera.matrix);
 
     }
 
@@ -75,6 +79,8 @@ export default class View {
 
     resize( w, h ){
 
+        this.renderer.setSize( w, h );
+        this.camera.aspect = w / h;
 
     }
 

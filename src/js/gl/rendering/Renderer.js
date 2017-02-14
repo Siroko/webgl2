@@ -19,9 +19,18 @@ export default class Renderer{
     constructor( opts ){
 
         this.domElement = document.createElement('canvas');
+        this.isWebGL2 = true;
         this.gl = this.domElement.getContext( 'webgl2', { antialias: true } );
         if ( !this.gl ) this.gl = this.domElement.getContext( 'experimental-webgl2', { antialias: true } );
-
+        if ( !this.gl ){
+            this.gl = this.domElement.getContext( 'webgl', { antialias: true } );
+            console.log('using webgl1 backend');
+            this.isWebGL2 = false;
+        } else {
+            console.log('using webgl2 backend');
+        }
+        if ( !this.gl ) this.gl = this.domElement.getContext( 'experimental-webgl', { antialias: true } );
+        if ( !this.gl ) alert("you don't have webGL available");
         this.setSize( opts.width, opts.height );
 
     }
