@@ -70,15 +70,19 @@ export default class Renderer{
 
                 let program = this.createProgram( cmd.vs, cmd.fs );
                 cmd.program = program;
-
-                for( let prop in cmd.attributes ){
-                    let vbo = this.createAttributeArray( prop, cmd.attributes[ prop ].value, cmd.program, cmd.attributes[ prop ].size, cmd.attributes[ prop ].type );
-                    cmd.vbos.push( vbo );
+                let k = cmd.attributes.length;
+                while( k --> 0 ){
+                    let attr = cmd.attributes[ k ];
+                    if( ! attr.initialized ) {
+                        let vbo = this.createAttributeArray( attr.id, attr.data, cmd.program, attr.size, attr.type );
+                        attr.initialized = true;
+                        attr.webglVBO = vbo;
+                    }
                 }
 
                 for( let uniformID in cmd.uniforms ){
                     cmd.uniforms[ uniformID ].allocation = gl.getUniformLocation( program, uniformID );
-                }
+                }  
 
                 cmd.initialized = true;
                 cmd.GLPrimitive = this.getGLPrimitive( cmd.primitive );
@@ -88,9 +92,10 @@ export default class Renderer{
             // Tell it to use our program (pair of shaders)
             gl.useProgram(cmd.program);
 
-            for (let j = 0; j < cmd.vbos.length; j++) {
+            let j = cmd.attributes.length;
+            while ( j --> 0 ) {
                 // Bind the attribute/buffer set we want.
-                gl.bindVertexArray( cmd.vbos[j] );
+                gl.bindVertexArray( cmd.attributes[j].webglVBO );
             }
 
             for( let uID in cmd.uniforms ){

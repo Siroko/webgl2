@@ -14,7 +14,11 @@ import Camera                       from '../gl/object/Camera';
 import CameraControl                from '../gl/utils/CameraControl';
 import CommandStack                 from '../gl/core/CommandStack';
 import GLCommand                    from '../gl/core/GLCommand';
+import VertexBufferObject           from '../gl/buffer/VertexBufferObject';
 import PlaneGeometry                from '../gl/object/primitives/PlaneGeometry';
+
+import vsTransformFeedback          from '../gl/rendering/shaders/es3/basic/vs-transform-feedback.glsl';
+import fsTransformFeedback          from '../gl/rendering/shaders/es3/basic/fs-transform-feedback.glsl';
 
 import es3_vs                       from '../gl/rendering/shaders/es3/basic/vs.glsl';
 import es3_fs                       from '../gl/rendering/shaders/es3/basic/fs.glsl';
@@ -45,20 +49,39 @@ export default class View {
         this.stack = new CommandStack();
         this.plane = new PlaneGeometry( 200, 200, 10, 10 );
 
-        let vs = this.renderer.isWebGL2 ? es3_vs : es2_vs;
-        let fs = this.renderer.isWebGL2 ? es3_fs : es2_fs;
-
-        this.command = new GLCommand({
+        this.positionsAttribute = new VertexBufferObject('position', 3, geo, GL_FLOAT_TYPE );
+        this.tfCommand = new GLCommand({
             primitive: GL_POINTS_PRIMITIVE,
-            vs: vs,
-            fs: fs,
-            attributes: {
-                'position' : { size: 3, value: geo, type: GL_FLOAT_TYPE }
-            },
+            attributes: [
+                this.positionsAttribute
+            ],
             uniforms: {
                 'modelMatrix' : { type: 'm4', value: this.plane.matrix },
                 'viewProjectionMatrix' : { type: 'm4', value: this.camera.viewProjectionMatrix }
             },
+            varyings:{
+                'vPosition': { type: 'v3' }
+            },
+            vs: vsTransformFeedback,
+            fs: fsTransformFeedback,
+
+            count: geo.length / 3
+        });
+
+        let vs = this.renderer.isWebGL2 ? es3_vs : es2_vs;
+        let fs = this.renderer.isWebGL2 ? es3_fs : es2_fs;
+        this.command = new GLCommand({
+            primitive: GL_POINTS_PRIMITIVE,
+            vs: vs,
+            fs: fs,
+            attributes: [
+                this.positionsAttribute
+            ],
+            uniforms: {
+                'modelMatrix' : { type: 'm4', value: this.plane.matrix },
+                'viewProjectionMatrix' : { type: 'm4', value: this.camera.viewProjectionMatrix }
+            },
+
             count: geo.length / 3
         });
 
