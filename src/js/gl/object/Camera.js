@@ -32,8 +32,8 @@ export default class Camera extends Object3D {
         mat4.identity( this._matrix );
         mat4.multiply( this._matrix, this._translationMatrix, this._rotationMatrix );
 
-        mat4.identity(this._viewMatrix);
-        mat4.invert(this._viewMatrix, this._matrix);
+        mat4.identity( this._viewMatrix );
+        mat4.invert( this._viewMatrix, this._matrix );
         mat4.identity( this._viewProjectionMatrix );
         mat4.multiply( this._viewProjectionMatrix, this._perspectiveMatrix, this._viewMatrix );
 
@@ -70,13 +70,13 @@ export default class Camera extends Object3D {
 
         if( target ) this._target = vec3.fromValues( target[0], target[1], target[2] );
         let eye = vec3.create();
-        vec3.subtract(eye, this._position, this._target);
+        vec3.subtract( eye, this._position, this._target );
 
         mat4.identity( this._matrix );
         mat4.lookAt( this._matrix, this._position, this._target, this._upVector );
 
-        mat4.identity(this._viewMatrix);
-        mat4.copy(this._viewMatrix, this._matrix);
+        mat4.identity( this._viewMatrix );
+        mat4.copy( this._viewMatrix, this._matrix );
         mat4.identity( this._viewProjectionMatrix );
         mat4.multiply( this._viewProjectionMatrix, this._perspectiveMatrix, this._viewMatrix );
 
