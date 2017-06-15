@@ -71,7 +71,7 @@ export default class View {
         let vs = this.renderer.isWebGL2 ? es3_vs : es2_vs;
         let fs = this.renderer.isWebGL2 ? es3_fs : es2_fs;
         this.command = new GLCommand({
-            primitive: GL_POINTS_PRIMITIVE,
+            primitive: GL_LINES_PRIMITIVE,
             vs: vs,
             fs: fs,
             attributes: [

@@ -19,4 +19,5 @@ export const GL_NEAREST_MIPMAP_LINEAR_FILTER        = 'nearest_mipmap_linear_fil
 export const GL_LINEAR_MIPMAP_NEAREST_FILTER        = 'linear_mipmap_nearest_filter';
 export const GL_LINEAR_MIPMAP_LINEAR_FILTER         = 'linear_mipmap_linear_filter';
 
-export const GL_CLAMP_TO_EDGE                       = 'clamp_to_edge';
+export const GL_CLAMP_TO_EDGE_WRAP                  = 'clamp_to_edge_wrap';
+export const GL_REPEAT_WRAP                         = 'repeat_wrap';
